@@ -69,7 +69,7 @@ public static class ResourceBuilderExtensions
             foreach (var allocatedEndPoint in allocatedEndPoints)
             {
                 var bindingNameQualifiedUriStringKey = $"ReverseProxy__Clusters__{name}Cluster__Destinations__{name}__Address";
-                context.EnvironmentVariables[bindingNameQualifiedUriStringKey] = allocatedEndPoint.BindingNameQualifiedUriString;
+                context.EnvironmentVariables[bindingNameQualifiedUriStringKey] = allocatedEndPoint.UriString;
             }
         };
     }

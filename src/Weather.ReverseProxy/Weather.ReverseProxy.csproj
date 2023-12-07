@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Weather\Weather.ServiceDefaults\Weather.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Weather.ServiceDefaults\Weather.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

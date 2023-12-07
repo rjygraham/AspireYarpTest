@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Weather.ReverseProxy\Weather.ReverseProxy.csproj" />
     <ProjectReference Include="..\Weather.ApiService\Weather.ApiService.csproj" />
+    <ProjectReference Include="..\Weather.ReverseProxy\Weather.ReverseProxy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
