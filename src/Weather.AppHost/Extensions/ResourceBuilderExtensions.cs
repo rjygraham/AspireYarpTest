@@ -13,14 +13,14 @@ public static class ResourceBuilderExtensions
     /// <param name="source">The resource from which to extract service bindings.</param>
     /// <param name="matchPath">The path to match.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TDestination}"/>.</returns>
-    public static IResourceBuilder<TDestination> WithProxiedReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<IResourceWithBindings> source, string matchPath)
+    public static IResourceBuilder<TDestination> WithProxiedReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<IResourceWithBindings> source, string matchPath, string? pathTransformPattern = null)
         where TDestination : IResourceWithEnvironment
     {
-        ApplyBinding(builder, source.Resource, matchPath);
+        ApplyBinding(builder, source.Resource, matchPath, pathTransformPattern);
         return builder;
     }
 
-    private static void ApplyBinding<T>(this IResourceBuilder<T> builder, IResourceWithBindings resourceWithBindings, string matchPath, string? bindingName = null)
+    private static void ApplyBinding<T>(this IResourceBuilder<T> builder, IResourceWithBindings resourceWithBindings, string matchPath, string? pathTransformPattern = null, string? bindingName = null)
         where T : IResourceWithEnvironment
     {
         // When adding a proxied service reference we get to see whether there is a ProxiedServiceReferencesAnnotation
@@ -34,7 +34,7 @@ public static class ResourceBuilderExtensions
 
         if (serviceReferenceAnnotation == null)
         {
-            serviceReferenceAnnotation = new ProxiedServiceReferenceAnnotation(resourceWithBindings, matchPath);
+            serviceReferenceAnnotation = new ProxiedServiceReferenceAnnotation(resourceWithBindings, matchPath, pathTransformPattern);
             builder.WithAnnotation(serviceReferenceAnnotation);
 
             var callback = CreateProxiedServiceReferenceEnvironmentPopulationCallback(serviceReferenceAnnotation);
@@ -60,7 +60,11 @@ public static class ResourceBuilderExtensions
 
             context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__ClusterId"] = $"{name}Cluster";
             context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Match__Path"] = proxiedServiceReferencesAnnotation.MatchPath;
-            context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Transforms__0__PathPattern"] = "/{remainder}";
+
+            if (proxiedServiceReferencesAnnotation.PathTransformPattern is not null)
+            {
+                context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Transforms__0__PathPattern"] = proxiedServiceReferencesAnnotation.PathTransformPattern;
+            }
 
             var allocatedEndPoints = proxiedServiceReferencesAnnotation.Resource.Annotations
                 .OfType<AllocatedEndpointAnnotation>()
