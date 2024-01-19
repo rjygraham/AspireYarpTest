@@ -16,11 +16,11 @@ private static Action<EnvironmentCallbackContext> CreateProxiedServiceReferenceE
         var name = proxiedServiceReferencesAnnotation.Resource.Name;
 
         context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__ClusterId"] = $"{name}Cluster";
-        context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Match__Path"] = proxiedServiceReferencesAnnotation.MatchPath;
+        context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Match__Path"] = AppendRemainder(proxiedServiceReferencesAnnotation.PathPrefix);
 
-        if (proxiedServiceReferencesAnnotation.PathTransformPattern is not null)
+        if (proxiedServiceReferencesAnnotation.RemovePathPrefix)
         {
-            context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Transforms__0__PathPattern"] = proxiedServiceReferencesAnnotation.PathTransformPattern;
+            context.EnvironmentVariables[$"ReverseProxy__Routes__{name}Route__Transforms__0__PathRemovePrefix"] = proxiedServiceReferencesAnnotation.PathPrefix;
         }
 
         var allocatedEndPoints = proxiedServiceReferencesAnnotation.Resource.Annotations
@@ -38,7 +38,7 @@ private static Action<EnvironmentCallbackContext> CreateProxiedServiceReferenceE
 
 ### Usage
 
-To wire up a project to YARP, simply invoke the `WithProxiedReference` extension method on the YARP project passing in a reference to the API project and the path to be matched. You can also specify a value for the optional `pathTransformPattern` parameter in the event you need/want to modify the path in which YARP invokes on the backend API. In the case of this POC, I'm telling YARP to remove the `/weather/` section from the path before forwarding to the `apiservice`.
+To wire up a project to YARP, simply invoke the `WithProxiedReference` extension method on the YARP project passing in a reference to the API project and the path to be matched which routes traffic to the API. The boolean parameter instructs the YARP project to keep or remove the path prefix in the path that is forwarded to the API project. In most instances you'll want to set this value to `true` in order to remove the path prefix.
 
 ```csharp
 using Weather.AppHost.Extensions;
@@ -48,7 +48,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var apiservice = builder.AddProject<Projects.Weather_ApiService>("apiservice");
 
 builder.AddProject<Projects.Weather_ReverseProxy>("reverseproxy")
-    .WithProxiedReference(apiservice, "/weather/{**remainder}", "/{remainder}");
+    .WithProxiedReference(apiservice, "/weather", true);
 
 builder.Build().Run();
 ```
